@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron' // eslint-disable-line
 
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -43,6 +44,12 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+// const fs = require('fs');
+// const root = fs.readdirSync('./test_dir');
+const config = require('./../../config.json');
+const fullPath = `${config.rows[4].path}\\${config.column[4].name}`;
+console.log(fullPath);
 
 /**
  * Auto Updater
