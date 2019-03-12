@@ -1,5 +1,5 @@
-import { app, BrowserWindow } from 'electron' // eslint-disable-line
-
+import { app, BrowserWindow, ipcMain } from 'electron' // eslint-disable-line
+const fs = require('fs');
 
 /**
  * Set `__static` path to static files in production
@@ -47,9 +47,48 @@ app.on('activate', () => {
 
 // const fs = require('fs');
 // const root = fs.readdirSync('./test_dir');
+const fields = [[]];
 const config = require('./../../config.json');
-const fullPath = `${config.rows[4].path}\\${config.column[4].name}`;
-console.log(fullPath);
+/* config.headers.forEach((head) => {
+  fields.push(head.name);
+}); */
+
+/* (file) => {
+  fs.stat(file, (err, stat) => {
+
+  }); */
+
+config.rows.forEach((row, indexRow) => {
+  config.columns.forEach((col, indexCol) => {
+    if (col.name === 'name') {
+      fields[indexRow].append(row.name);
+    } else {
+      const pathFolder = fs.readdirSync(`${row.path}\\${col.name}`);
+      console.log(pathFolder);
+      pathFolder.sort((a, b) => {
+        fs.stat(a, (err, statA) => {
+          fs.stat(b, (err, statB) => {
+            if (statA.ctime > statB.ctime) return 1;
+            if (statA.ctime < statB.ctime) return -1;
+          });
+        });
+      });
+
+      console.log(pathFolder[0]);
+
+      fields[indexRow].append();
+    }
+  });
+});
+
+console.log(fields);
+
+ipcMain.on('get-fields', (event) => {
+  event.sender.send('fields', fields);
+});
+
+/* const fullPath = `${config.data[4].path}\\${config.headers[4].name}`;
+console.log(fullPath); */
 
 /**
  * Auto Updater
