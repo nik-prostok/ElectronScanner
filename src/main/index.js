@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron' // eslint-disable-line
 const fs = require('fs');
+const _ = require('underscore');
+const path = require('path');
 
 /**
  * Set `__static` path to static files in production
@@ -45,67 +47,52 @@ app.on('activate', () => {
   }
 });
 
-// const fs = require('fs');
+// eslint-disable-next-line no-unused-vars
+function getMostRecentFileName(dir) {
+  let files;
+  try {
+    files = fs.readdirSync(dir);
+    return _.max(files, (f) => {
+      const fullpath = path.join(dir, f);
+      // ctime = creation time is used
+      // replace with mtime for modification time
+      return fs.statSync(fullpath).ctime;
+    });
+  } catch (err) {
+    return 'Not dir';
+  }
+}
+
 // const root = fs.readdirSync('./test_dir');
-const fields = [[]];
+const fields = [];
 const config = require('./../../config.json');
-/* config.headers.forEach((head) => {
-  fields.push(head.name);
-}); */
 
-/* (file) => {
-  fs.stat(file, (err, stat) => {
-
-  }); */
-
-config.rows.forEach((row, indexRow) => {
-  config.columns.forEach((col, indexCol) => {
+config.rows.forEach((row, rowIndex) => {
+  fields.push([]);
+  config.columns.forEach((col) => {
     if (col.name === 'name') {
-      fields[indexRow].append(row.name);
-    } else {
-      const pathFolder = fs.readdirSync(`${row.path}\\${col.name}`);
-      console.log(pathFolder);
-      pathFolder.sort((a, b) => {
-        fs.stat(a, (err, statA) => {
-          fs.stat(b, (err, statB) => {
-            if (statA.ctime > statB.ctime) return 1;
-            if (statA.ctime < statB.ctime) return -1;
-          });
-        });
+      fields[rowIndex] = ({
+        name: row.name,
       });
-
-      console.log(pathFolder[0]);
-
-      fields[indexRow].append();
+    } else {
+      fields[rowIndex][col.name] = getMostRecentFileName(`${row.path}/${col.name}`);
     }
+    // console.log(getMostRecentFileName(`${row.path}/${col.name}`));
   });
+  console.log();
 });
 
 console.log(fields);
 
-ipcMain.on('get-fields', (event) => {
-  event.sender.send('fields', fields);
+const data = {
+  items: fields,
+  headers: config.columns,
+  rows: config.rows,
+};
+
+ipcMain.on('get-data', (event) => {
+  event.sender.send('data', data);
 });
 
 /* const fullPath = `${config.data[4].path}\\${config.headers[4].name}`;
 console.log(fullPath); */
-
-/**
- * Auto Updater
- *
- * Uncomment the following code below and install `electron-updater` to
- * support auto updating. Code Signing with a valid certificate is required.
- * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-electron-builder.html#auto-updating
- */
-
-/*
-import { autoUpdater } from 'electron-updater'
-
-autoUpdater.on('update-downloaded', () => {
-  autoUpdater.quitAndInstall()
-})
-
-app.on('ready', () => {
-  if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
-})
- */

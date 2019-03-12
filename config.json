@@ -17,7 +17,7 @@
       "colHelp": "col3!"
     },
     {
-      "name": "test_dir",
+      "name": "test1",
       "colHelp": "col_test_dir"
     },
     {
@@ -27,28 +27,12 @@
   ],
   "rows": [
     {
-      "name": "Andrew",
-      "path": "C:\\Users\\Andrew"
-    },
-    {
       "name": "Nik",
-      "path": "C:\\Users\\Nik"
+      "path": "/home/nik-prost/test_dir/"
     },
     {
-      "name": "Aleаx",
-      "path": "C:\\Users\\Aleаx"
-    },
-    {
-      "name": "Saha",
-      "path": "C:\\Users\\lin3"
-    },
-    {
-      "name": "Dima",
-      "path": "C:\\Users\\User\\Desktop\\program"
-    }, 
-    {
-      "name": "Ivan",
-      "path": "C:\\Users\\User\\Desktop\\program"
+      "name": "Andrew",
+      "path": "/home/nik-prost/test_dir/test2"
     }
   ]
 }
