@@ -17,22 +17,22 @@
       "colHelp": "col3!"
     },
     {
-      "name": "test1",
+      "name": "testFolder1",
       "colHelp": "col_test_dir"
     },
     {
-      "name": "test_dir2",
+      "name": "testFolder2",
       "colHelp": "col_test_dir"
     }
   ],
   "rows": [
     {
       "name": "Nik",
-      "path": "/home/nik-prost/test_dir/"
+      "path": "C:\\Users\\User\\Desktop\\test_dir\\Nik"
     },
     {
       "name": "Andrew",
-      "path": "/home/nik-prost/test_dir/test2"
+      "path": "C:\\Users\\User\\Desktop\\test_dir\\Andrew"
     }
   ]
 }

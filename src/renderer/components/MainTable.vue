@@ -1,11 +1,9 @@
 <template>
   <div id="main-table">
-    <!-- <img id="logo" src="~@/assets/logo.png" alt="electron-vue"> -->
     <b-table striped hover :items="items" :fields="fields">
-      <template slot="HEAD_first_name" slot-scope="data">
-        <a v-b-tooltip="'ToolTip!'">{{ data.label }}</a>
+      <template v-for="head in headers" :slot="head.nameHead" slot-scope="data">
+        <b-button :key="head.nameHead" v-b-tooltip.hover :title="head.colHelp" variant="light"><b>{{ data.label }}</b></b-button>
       </template>
-      <template slot="first_name" slot-scope="data">{{ data.value }}</template>
     </b-table>
   </div>
 </template>
@@ -17,22 +15,27 @@ export default {
     return {
       fields: [],
       items: [],
+      headers: [],
     };
   },
   mounted() {
-    this.getFields();
+    this.getData();
   },
   methods: {
-    getFields() {
+    getData() {
       const vm = this;
       this.$electron.ipcRenderer.send('get-data');
       this.$electron.ipcRenderer.on('data', (event, arg) => {
         arg.headers.forEach((head) => {
           vm.fields.push(head.name);
         });
+        this.headers = arg.headers;
+        console.log(this.headers);
+        this.headers.forEach((head) => {
+          head.nameHead = `HEAD_${head.name}`;
+        });
         this.items = arg.items;
-        console.log(this.fields);
-        console.log(arg); // prints "pong"
+        console.log(this.headers);
       });
     },
   },
