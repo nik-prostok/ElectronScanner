@@ -12,6 +12,13 @@
       "type": "npm",
       "script": "lint:fix",
       "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
     }
   ]
 }

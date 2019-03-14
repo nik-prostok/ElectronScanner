@@ -1,5 +1,49 @@
-import { app, BrowserWindow, ipcMain } from 'electron'; // eslint-disable-lint
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+} from 'electron'; // eslint-disable-lint
 import getData from './getData';
+import addCol from './addCol';
+import addRow from './addRow';
+
+const template = [{
+  label: 'Вид',
+  submenu: [{
+    role: 'reload',
+    label: 'Перезагрузить',
+  },
+  {
+    role: 'toggledevtools',
+    label: 'Режим разработчика',
+  },
+  {
+    type: 'separator',
+  },
+  {
+    type: 'separator',
+  },
+  {
+    role: 'togglefullscreen',
+    label: 'На полный экран',
+  },
+  ],
+},
+{
+  role: 'help',
+  label: 'Помощь',
+  submenu: [{
+    label: 'Learn More',
+    click() {
+      require('electron').shell.openExternal('https://electronjs.org');
+    },
+  }],
+},
+];
+
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
 
 /**
  * Set `__static` path to static files in production
@@ -48,4 +92,16 @@ app.on('activate', () => {
 
 ipcMain.on('get-data', (event) => {
   event.sender.send('data', getData());
+});
+
+ipcMain.on('newCol', (event, arg) => {
+  console.log(arg);
+  addCol(arg);
+  event.sender.send('status', 200);
+});
+
+ipcMain.on('newRow', (event, arg) => {
+  console.log(arg);
+  addRow(arg);
+  event.sender.send('status', 200);
 });

@@ -1,8 +1,7 @@
 const fs = require('fs');
 const _ = require('underscore');
 const path = require('path');
-const config = require('./../../config.json');
-
+// const config = require('./../../config.json');
 
 function getMostRecentFileName(dir) {
   let files;
@@ -20,6 +19,10 @@ function getMostRecentFileName(dir) {
 }
 
 export default function getData() {
+  let config = [];
+  let data = {};
+  config = fs.readFileSync('./config.json');
+  config = JSON.parse(config);
   const rows = [];
   config.rows.forEach((row, rowIndex) => {
     rows.push([]);
@@ -33,7 +36,7 @@ export default function getData() {
       }
     });
   });
-  const data = {
+  data = {
     items: rows,
     headers: config.columns,
     rows: config.rows,
