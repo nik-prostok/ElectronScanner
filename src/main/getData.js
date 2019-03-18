@@ -11,7 +11,7 @@ function getMostRecentFileName(dir) {
       const fullpath = path.join(dir, f);
       // ctime = creation time is used
       // replace with mtime for modification time
-      return fs.statSync(fullpath).mtime;
+      return fs.statSync(fullpath).ctime;
     });
   } catch (err) {
     return 'Not dir';
@@ -26,13 +26,12 @@ export default function getData() {
   const rows = [];
   config.rows.forEach((row, rowIndex) => {
     rows.push([]);
-    config.columns.forEach((col) => {
-      if (col.name === 'name') {
-        rows[rowIndex] = ({
-          name: row.name,
-        });
+    rows[rowIndex] = {};
+    config.columns.forEach((col, colIndex) => {
+      if (col.label === 'Имя') {
+        rows[rowIndex][`col${colIndex}`] = row.name;
       } else {
-        rows[rowIndex][col.name] = getMostRecentFileName(`${row.path}/${col.name}`);
+        rows[rowIndex][`col${colIndex}`] = getMostRecentFileName(`${row.path}/${col.label}`);
       }
     });
   });

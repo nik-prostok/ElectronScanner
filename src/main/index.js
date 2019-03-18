@@ -4,9 +4,12 @@ import {
   ipcMain,
   Menu,
 } from 'electron'; // eslint-disable-lint
+
 import getData from './getData';
 import addCol from './addCol';
 import addRow from './addRow';
+import delCol from './delCol';
+import editCol from './editCol';
 
 const template = [{
   label: 'Вид',
@@ -94,14 +97,22 @@ ipcMain.on('get-data', (event) => {
   event.sender.send('data', getData());
 });
 
+ipcMain.on('editCol', (event, arg) => {
+  editCol(arg);
+  event.sender.send('status', 200);
+});
+
+ipcMain.on('delCol', (event, arg) => {
+  delCol(arg);
+  event.sender.send('status', 200);
+});
+
 ipcMain.on('newCol', (event, arg) => {
-  console.log(arg);
   addCol(arg);
   event.sender.send('status', 200);
 });
 
 ipcMain.on('newRow', (event, arg) => {
-  console.log(arg);
   addRow(arg);
   event.sender.send('status', 200);
 });
