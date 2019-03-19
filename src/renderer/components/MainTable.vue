@@ -1,10 +1,11 @@
 <template>
   <div id="main-table" class="mb-1 mt-1">
     <!-- <b-button @click="toggleBusy">Toggle Busy State</b-button> -->
-    <div class="container">
+    <!-- <div class="container">
       <div class="d-flex flex-row">
         <b-button-group size="lg" class="m-2">
           <b-button
+          id="testButton"
             v-b-tooltip.hover
             title="Добавить колонку в таблицу"
             variant="success"
@@ -18,12 +19,14 @@
           >Добавить строку</b-button>
         </b-button-group>
       </div>
-    </div>
+    </div>-->
+    <b-button id="testButton" title="test" variant="success">test</b-button>
 
     <b-table
       :busy="isBusy"
       striped
       fixed
+      id="mainTable"
       selectable
       selectedVariant="success"
       hover
@@ -32,18 +35,34 @@
       :fields="fields"
       select-mode="single"
       @row-selected="rowSelected"
+      @row-clicked="rowClickHandler"
     >
       <template slot="col0" slot-scope="data">
-        <b-button size="sm" :id="`button${data.value}`" :key="data.value" variant="outline-secondary">
-          {{data.value}}
-        </b-button>
+        <b-button
+          size="sm"
+          :id="`button${data.value}`"
+          :key="data.value"
+          variant="outline-secondary"
+        >{{data.value}}</b-button>
       </template>
 
       <template slot="col1" slot-scope="data">
-          <div :id="">{{data.value}}</div>
+        <div :id="`pop${data.index}`">{{data.value.value }}</div>
+        <b-popover
+          :id="`idPop${data.index}`"
+          :key="`col1id${data.index}`"
+          :target="`pop${data.index}`"
+          placement="top"
+          title="head.colHelp"
+        />
       </template>
       <template v-for="head in headers" :slot="head.nameHead">
-        <b-button size="sm" :id="`button${head.nameHead}`" :key="head.nameHead" variant="outline-secondary">
+        <b-button
+          size="sm"
+          :id="`button${head.nameHead}`"
+          :key="head.nameHead"
+          variant="outline-secondary"
+        >
           <b>{{ head.label }}</b>
         </b-button>
         <b-popover
@@ -233,8 +252,31 @@ export default {
   },
   mounted() {
     this.getData();
+    this.setListenAddCol();
+    this.setListenAddRow();
   },
   methods: {
+    rowClickHandler(record, index) {
+      console.log(record);
+      console.log(index);
+      if (this.selected[0]) {
+        this.$root.$emit('bv::hide::popover');
+        this.$root.$emit('bv::show::popover', `pop${index}`);
+      } else {
+        console.log('unselected');
+        this.$root.$emit('bv::hide::popover');
+      }
+    },
+    setListenAddCol() {
+      this.$electron.ipcRenderer.on('callAddColModal', () => {
+        this.showModalAddCol = !this.showModalAddCol;
+      });
+    },
+    setListenAddRow() {
+      this.$electron.ipcRenderer.on('callAddRowModal', () => {
+        this.showModalAddRow = !this.showModalAddRow;
+      });
+    },
     showModalEdit(label, colHelp) {
       this.newHelp = colHelp;
       this.newLabel = label;
@@ -313,8 +355,18 @@ export default {
           vm.fields.push(`col${index}`);
           head.nameHead = `HEAD_col${index}`;
         });
-        this.items = arg.items;
-        console.log(this.headers);
+        this.items = [];
+
+        this.items = JSON.parse(JSON.stringify(arg.items));
+        this.items.forEach((item, index) => {
+          console.log(item.col1);
+          const newItem = {
+            value: item.col1,
+            index,
+          };
+          item.col1 = newItem;
+          console.log(item.col1);
+        });
       });
       this.isBusy = false;
     },

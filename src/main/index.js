@@ -11,6 +11,8 @@ import addRow from './addRow';
 import delCol from './delCol';
 import editCol from './editCol';
 
+let mainWindow;
+
 const template = [{
   label: 'Вид',
   submenu: [{
@@ -43,6 +45,21 @@ const template = [{
     },
   }],
 },
+{
+  label: 'Редактор',
+  submenu: [{
+    label: 'Добавить колонку',
+    click() {
+      mainWindow.webContents.send('callAddColModal');
+    },
+  },
+  {
+    label: 'Добавить строку',
+    click() {
+      mainWindow.webContents.send('callAddRowModal');
+    },
+  }],
+},
 ];
 
 const menu = Menu.buildFromTemplate(template);
@@ -56,7 +73,6 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\') // eslint-disable-line
 }
 
-let mainWindow;
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`;
