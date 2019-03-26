@@ -4,12 +4,14 @@ import {
   ipcMain,
   Menu,
 } from 'electron'; // eslint-disable-lint
+import watch from 'node-watch';
 
 import getData from './getData';
 import addCol from './addCol';
 import addRow from './addRow';
 import delCol from './delCol';
 import editCol from './editCol';
+
 
 let mainWindow;
 
@@ -131,4 +133,11 @@ ipcMain.on('newCol', (event, arg) => {
 ipcMain.on('newRow', (event, arg) => {
   addRow(arg);
   event.sender.send('status', 200);
+});
+
+watch('C:\\Users\\User\\Desktop\\test_dir', {
+  recursive: true,
+}, (evt, name) => {
+  console.log('%s changed.', name);
+  mainWindow.webContents.send('data', getData());
 });

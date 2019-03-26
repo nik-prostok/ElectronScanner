@@ -27,11 +27,21 @@ export default function getData() {
   config.rows.forEach((row, rowIndex) => {
     rows.push([]);
     rows[rowIndex] = {};
-    config.columns.forEach((col, colIndex) => {
-      if (col.label === 'Имя') {
+    config.columns.forEach((col, colIndex, arr) => {
+      if (col.label === arr[0].label) {
         rows[rowIndex][`col${colIndex}`] = row.name;
       } else {
         rows[rowIndex][`col${colIndex}`] = getMostRecentFileName(`${row.path}/${col.label}`);
+      }
+      if (colIndex === (arr.length - 1)) {
+        const index = colIndex + 1;
+        rows[rowIndex][`col${index}`] = [];
+        if (row.addPath !== undefined) {
+          console.log(row.addPath);
+          row.addPath.forEach((namePath, ind) => {
+            rows[rowIndex][`col${index}`][ind] = `${namePath.name} ${getMostRecentFileName(`${row.path}/${namePath.name}`)}`;
+          });
+        }
       }
     });
   });

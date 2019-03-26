@@ -20,8 +20,6 @@
         </b-button-group>
       </div>
     </div>-->
-    <b-button id="testButton" title="test" variant="success">test</b-button>
-
     <b-table
       :busy="isBusy"
       striped
@@ -37,14 +35,14 @@
       @row-selected="rowSelected"
       @row-clicked="rowClickHandler"
     >
-      <template slot="col0" slot-scope="data">
+      <!-- <template slot="col0" slot-scope="data">
         <b-button
           size="sm"
           :id="`button${data.value}`"
           :key="data.value"
           variant="outline-secondary"
         >{{data.value}}</b-button>
-      </template>
+      </template> -->
 
       <template slot="col1" slot-scope="data">
         <div :id="`pop${data.index}`">{{data.value.value }}</div>
@@ -66,13 +64,14 @@
           <b>{{ head.label }}</b>
         </b-button>
         <b-popover
+          v-if="head.label != headers[0].label"
           :key="`popover${head.nameHead}`"
           :target="`button${head.nameHead}`"
           placement="top"
           :title="head.colHelp"
           triggers="hover focus"
         >
-          <div v-if="head.label != 'Имя'" class="d-flex flex-column">
+          <div class="d-flex flex-column">
             <b-button class="mb-1" @click="deleteCol(head.label)" variant="danger">Удалить</b-button>
             <b-button
               class="mt-1"
@@ -186,7 +185,7 @@
           id="nameRowInputGroup"
           label="Имя строки:"
           label-for="nameRowInput"
-          description="Имя строки отображается в первой строке"
+          description="Имя строки отображается в первой колонке"
         >
           <b-form-input
             id="nameRowInput"
@@ -209,6 +208,24 @@
             v-model="newRow.path"
             required
             placeholder="Введите путь с разделителями '\\'"
+          />
+        </b-form-group>
+         <b-form-group
+          id="nameRowInputGroup"
+          label="Дополнительные директории:"
+          label-for="nameRowInput"
+          description="Будет отображается в последней колонке"
+        >
+          <b-form-input
+            class="mt-1 mb-1"
+            v-for="(add, index) in newRow.addPath"
+            :key="index"
+            :id='$uuid.v4()'
+            type="text"
+            v-model.lazy="add.name"
+            required
+            @change="changeAddPath"
+            placeholder="Допускаются любые символы"
           />
         </b-form-group>
       </b-form>
@@ -242,7 +259,11 @@ export default {
       newRow: {
         name: '',
         path: '',
+        addPath: [{
+          name: '',
+        }],
       },
+
 
       fields: [],
       items: [],
@@ -254,8 +275,32 @@ export default {
     this.getData();
     this.setListenAddCol();
     this.setListenAddRow();
+    this.setListenData();
+    this.setListenStatus();
   },
   methods: {
+    setListenData() {
+      const vm = this;
+      this.$electron.ipcRenderer.on('data', (event, arg) => {
+        this.headers = arg.headers;
+        this.fields = [];
+        this.headers.forEach((head, index) => {
+          vm.fields.push(`col${index}`);
+          head.nameHead = `HEAD_col${index}`;
+        });
+        this.items = [];
+
+        this.items = JSON.parse(JSON.stringify(arg.items));
+        // this.items = this._.cloneDeep(arg.items);
+        this.items.forEach((item, index) => {
+          const newItem = {
+            value: item.col1,
+            index,
+          };
+          item.col1 = newItem;
+        });
+      });
+    },
     rowClickHandler(record, index) {
       console.log(record);
       console.log(index);
@@ -277,6 +322,13 @@ export default {
         this.showModalAddRow = !this.showModalAddRow;
       });
     },
+    setListenStatus() {
+      this.$electron.ipcRenderer.on('status', (event, arg) => {
+        if (arg === 200) {
+          this.getData();
+        }
+      });
+    },
     showModalEdit(label, colHelp) {
       this.newHelp = colHelp;
       this.newLabel = label;
@@ -288,9 +340,6 @@ export default {
       this.selected = items;
     },
     editCol() {
-      this.$electron.ipcRenderer.on('status', () => {
-        this.getData();
-      });
       this.$electron.ipcRenderer.send('editCol', {
         label: this.currentLabel,
         newLabel: this.newLabel,
@@ -304,26 +353,19 @@ export default {
       this.newHelp = '';
     },
     deleteCol(label) {
-      this.$electron.ipcRenderer.on('status', () => {
-        this.getData();
-      });
       this.$electron.ipcRenderer.send('delCol', label);
     },
     addRow() {
-      this.$electron.ipcRenderer.on('status', (event, arg) => {
-        if (arg === 200) {
-          this.getData();
+      /* this.newRow.addPath.forEach((path, index, arr) => {
+        path = path.name;
+        if (index === arr.length - 1) {
+          arr.splice(index, 1);
         }
-      });
+      }); */
       this.$electron.ipcRenderer.send('newRow', this.newRow);
       this.showModalAddRow = !this.showModalAddRow;
     },
     addCol() {
-      this.$electron.ipcRenderer.on('status', (event, arg) => {
-        if (arg === 200) {
-          this.getData();
-        }
-      });
       this.$electron.ipcRenderer.send('newCol', this.newCol);
       this.showModalAddCol = !this.showModalAddCol;
     },
@@ -346,29 +388,22 @@ export default {
     },
     getData() {
       console.log('getData');
-      const vm = this;
+      this.isBusy = true;
       this.$electron.ipcRenderer.send('get-data');
-      this.$electron.ipcRenderer.on('data', (event, arg) => {
-        this.headers = arg.headers;
-        this.fields = [];
-        this.headers.forEach((head, index) => {
-          vm.fields.push(`col${index}`);
-          head.nameHead = `HEAD_col${index}`;
-        });
-        this.items = [];
-
-        this.items = JSON.parse(JSON.stringify(arg.items));
-        this.items.forEach((item, index) => {
-          console.log(item.col1);
-          const newItem = {
-            value: item.col1,
-            index,
-          };
-          item.col1 = newItem;
-          console.log(item.col1);
-        });
-      });
       this.isBusy = false;
+    },
+    changeAddPath() {
+      console.log('changhe');
+      if (this.newRow.addPath[this.newRow.addPath.length - 1].name !== '') {
+        this.newRow.addPath.push({
+          name: '',
+        });
+      }
+      this.newRow.addPath.forEach((row, index, arr) => {
+        if ((row.name === '') && (arr.length - 1 !== index)) {
+          arr.splice(index, 1);
+        }
+      });
     },
   },
 };

@@ -1,7 +1,6 @@
 const fs = require('fs');
 
 export default function editCol(labels) {
-  console.log(labels);
   fs.readFile('./config.json', (err, data) => {
     if (err) throw err;
     let config = JSON.parse(data);
