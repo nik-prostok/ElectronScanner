@@ -42,7 +42,7 @@
           :key="data.value"
           variant="outline-secondary"
         >{{data.value}}</b-button>
-      </template> -->
+      </template>-->
 
       <template slot="col1" slot-scope="data">
         <div :id="`pop${data.index}`">{{data.value.value }}</div>
@@ -51,8 +51,11 @@
           :key="`col1id${data.index}`"
           :target="`pop${data.index}`"
           placement="top"
-          title="head.colHelp"
-        />
+          title="head"
+        >
+          <b-button class="mb-1" @click="deleteRow(head.label)" variant="danger">Удалить</b-button>
+          <b-button class="mt-1" @click="showModalEditR(data.index)" variant="success">Редактировать</b-button>
+        </b-popover>
       </template>
       <template v-for="head in headers" :slot="head.nameHead">
         <b-button
@@ -86,6 +89,68 @@
         <strong>Данные загружаются...</strong>
       </div>
     </b-table>
+
+    <b-modal
+      v-model="showModalEditRow"
+      title="Редактирование строки"
+      header-bg-variant="dark"
+      header-text-variant="light"
+      id="увшеRowModal"
+    >
+      <b-form>
+        <b-form-group
+          id="nameRowInputGroup"
+          label="Имя строки:"
+          label-for="nameRowInput"
+          description="Имя строки отображается в первой колонке"
+        >
+          <b-form-input
+            id="nameRowInput"
+            type="text"
+            v-model="newTitleRow"
+            required
+            placeholder="Допускаются любые символы"
+          />
+        </b-form-group>
+
+        <b-form-group
+          id="pathRowInputGroup"
+          label="Путь к папке:"
+          label-for="pathRowInput"
+          description="Путь до папки с результатами полета"
+        >
+          <b-form-input
+            id="pathRowInput"
+            type="text"
+            v-model="newPath"
+            required
+            placeholder="Введите путь с разделителями '\\'"
+          />
+        </b-form-group>
+        <b-form-group
+          id="nameRowInputGroup"
+          label="Дополнительные директории:"
+          label-for="nameRowInput"
+          description="Будет отображается в последней колонке"
+        >
+          <b-form-input
+            class="mt-1 mb-1"
+            v-for="(add, index) in newAddPath"
+            :key="index"
+            :id="$uuid.v4()"
+            type="text"
+            v-model.lazy="add.name"
+            required
+            @change="changeAddPath"
+            placeholder="Допускаются любые символы"
+          />
+        </b-form-group>
+      </b-form>
+      <template slot="modal-footer">
+        <b-button @click="resetEditRow" variant="danger">Сбросить</b-button>
+        <b-button @click="editRow" variant="primary">Сохранить</b-button>
+      </template>
+    </b-modal>
 
     <b-modal
       key="modalEdit"
@@ -123,7 +188,7 @@
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
-        <b-button @click="resetEditCol" type="reset" variant="danger">Сбросить</b-button>
+        <b-button @click="resetEditCol" variant="danger">Сбросить</b-button>
         <b-button @click="editCol" variant="primary">Сохранить</b-button>
       </template>
     </b-modal>
@@ -136,7 +201,7 @@
       header-bg-variant="dark"
       header-text-variant="light"
     >
-      <b-form @submit="addCol" @reset="resetAddCol">
+      <b-form>
         <b-form-group
           id="labelColInputGroup"
           label="Название колонки:"
@@ -168,8 +233,8 @@
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
-        <b-button @click="resetAddCol" type="reset" variant="danger">Сбросить</b-button>
-        <b-button @click="addCol" type="submit" variant="primary">Сохранить</b-button>
+        <b-button @click="resetAddCol" variant="danger">Сбросить</b-button>
+        <b-button @click="addCol" variant="primary">Сохранить</b-button>
       </template>
     </b-modal>
     <b-modal
@@ -180,7 +245,7 @@
       header-text-variant="light"
       id="addRowModal"
     >
-      <b-form @submit="addRow" @reset="resetAddRow">
+      <b-form>
         <b-form-group
           id="nameRowInputGroup"
           label="Имя строки:"
@@ -210,7 +275,7 @@
             placeholder="Введите путь с разделителями '\\'"
           />
         </b-form-group>
-         <b-form-group
+        <b-form-group
           id="nameRowInputGroup"
           label="Дополнительные директории:"
           label-for="nameRowInput"
@@ -220,7 +285,7 @@
             class="mt-1 mb-1"
             v-for="(add, index) in newRow.addPath"
             :key="index"
-            :id='$uuid.v4()'
+            :id="$uuid.v4()"
             type="text"
             v-model.lazy="add.name"
             required
@@ -230,8 +295,8 @@
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
-        <b-button @click="resetAddRow" type="reset" variant="danger">Сбросить</b-button>
-        <b-button @click="addRow" type="submit" variant="primary">Сохранить</b-button>
+        <b-button @click="resetAddRow" variant="danger">Сбросить</b-button>
+        <b-button @click="addRow" variant="primary">Сохранить</b-button>
       </template>
     </b-modal>
   </div>
@@ -245,12 +310,29 @@ export default {
       showModalAddCol: false,
       showModalAddRow: false,
       showModalEditCol: false,
+      showModalEditRow: false,
       isBusy: true,
 
       currentLabel: '',
       currentHelp: '',
       newLabel: '',
       newHelp: '',
+
+      currentTitleRow: '',
+      currentPath: '',
+      currentAddPath: [
+        {
+          name: '',
+        },
+      ],
+
+      newTitleRow: '',
+      newPath: '',
+      newAddPath: [
+        {
+          name: '',
+        },
+      ],
 
       newCol: {
         label: '',
@@ -259,11 +341,12 @@ export default {
       newRow: {
         name: '',
         path: '',
-        addPath: [{
-          name: '',
-        }],
+        addPath: [
+          {
+            name: '',
+          },
+        ],
       },
-
 
       fields: [],
       items: [],
@@ -336,6 +419,19 @@ export default {
       this.currentHelp = colHelp;
       this.showModalEditCol = !this.showModalEditCol;
     },
+    showModalEditR(id) {
+      /*  this.newTitleRow = titleRow;
+      this.newPath = path;
+      this.newAddPath = addPath;
+
+      this.currentTitleRow = titleRow;
+      this.currentPath = path;
+      this.currentAddPath = addPath; */
+
+      console.log(id);
+
+      this.showModalEditRow = !this.showModalEditRow;
+    },
     rowSelected(items) {
       this.selected = items;
     },
@@ -364,6 +460,14 @@ export default {
       }); */
       this.$electron.ipcRenderer.send('newRow', this.newRow);
       this.showModalAddRow = !this.showModalAddRow;
+    },
+    editRow() {
+      console.log(this.newTitleRow);
+      console.log(this.newPath);
+      console.log(this.addPath);
+    },
+    resetEditRow() {
+      console.log('reset');
     },
     addCol() {
       this.$electron.ipcRenderer.send('newCol', this.newCol);
@@ -400,7 +504,7 @@ export default {
         });
       }
       this.newRow.addPath.forEach((row, index, arr) => {
-        if ((row.name === '') && (arr.length - 1 !== index)) {
+        if (row.name === '' && arr.length - 1 !== index) {
           arr.splice(index, 1);
         }
       });
