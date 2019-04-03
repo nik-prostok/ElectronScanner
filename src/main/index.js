@@ -10,7 +10,9 @@ import getData from './getData';
 import addCol from './addCol';
 import addRow from './addRow';
 import delCol from './delCol';
+import delRow from './delRow';
 import editCol from './editCol';
+import editRow from './editRow';
 
 
 let mainWindow;
@@ -132,6 +134,16 @@ ipcMain.on('newCol', (event, arg) => {
 
 ipcMain.on('newRow', (event, arg) => {
   addRow(arg);
+  event.sender.send('status', 200);
+});
+
+ipcMain.on('editRow', (event, arg) => {
+  editRow(arg);
+  event.sender.send('status', 200);
+});
+
+ipcMain.on('delRow', (event, arg) => {
+  delRow(arg);
   event.sender.send('status', 200);
 });
 

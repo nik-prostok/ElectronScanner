@@ -1,1 +1,46 @@
-{"columns":[{"label":"Название","colHelp":"name!"},{"colHelp":"тестированиеr","label":"ФД"},{"colHelp":"test 2123131","label":"ИПО"},{"colHelp":"test 2","label":"ФПО БУК"},{"colHelp":"test 2","label":"ФПО БВУ"},{"colHelp":"test 2","label":"СОВП БУК"}],"rows":[{"name":"Nik","path":"C:\\Users\\User\\Desktop\\test_dir\\Nik","addPath":[]},{"name":"Andrew","path":"C:\\Users\\User\\Desktop\\test_dir\\Andrew","addPath":["Bu1","Bu2"]},{"addPath":[{"name":"4545"},{"name":"6566"},{"name":"7777"},{"name":""}],"name":"3434","path":"3434"},{"addPath":[{"name":"343"},{"name":"34242"},{"name":"32234"},{"name":""}],"name":"34343","path":"4342"}]}
+{
+    "columns": [{
+        "label": "Название",
+        "colHelp": "name!"
+    }, {
+        "colHelp": "тестированиеr",
+        "label": "ФД"
+    }, {
+        "colHelp": "test 2123131",
+        "label": "ИПО"
+    }, {
+        "colHelp": "test 2",
+        "label": "ФПО БУК"
+    }, {
+        "colHelp": "test 2",
+        "label": "ФПО БВУ"
+    }, {
+        "colHelp": "test 2",
+        "label": "СОВП БУК"
+    }],
+    "rows": [{
+        "name": "Nik",
+        "path": "C:\\Users\\User\\Desktop\\test_dir\\Nik",
+        "addPath": []
+    }, {
+        "name": "Andrew22",
+        "path": "C:\\Users\\User\\Desktop\\test_dir\\Andrew33",
+        "addPath": [{
+            "name": "Bu13"
+        }, {
+            "name": "Bu24"
+        }, {
+            "name": ""
+        }]
+    }, {
+        "addPath": [{
+            "name": "4545"
+        }, {
+            "name": "6566"
+        }, {
+            "name": "7777"
+        }],
+        "name": "3434",
+        "path": "3434"
+    }]
+}

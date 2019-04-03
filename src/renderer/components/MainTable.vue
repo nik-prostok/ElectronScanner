@@ -33,17 +33,15 @@
       :fields="fields"
       select-mode="single"
       @row-selected="rowSelected"
+      @row-contextmenu="rowRightClickHandler"
       @row-clicked="rowClickHandler"
     >
-      <!-- <template slot="col0" slot-scope="data">
-        <b-button
-          size="sm"
-          :id="`button${data.value}`"
-          :key="data.value"
-          variant="outline-secondary"
-        >{{data.value}}</b-button>
-      </template>-->
-
+      <template slot="addPath" slot-scope="data">
+        <div :key=index v-for="(path, index) in data.item.addPath">
+           <p v-if="path.name !== ''">{{path.name}}</p>
+        </div>
+         
+      </template>
       <template slot="col1" slot-scope="data">
         <div :id="`pop${data.index}`">{{data.value.value }}</div>
         <b-popover
@@ -51,9 +49,8 @@
           :key="`col1id${data.index}`"
           :target="`pop${data.index}`"
           placement="top"
-          title="head"
         >
-          <b-button class="mb-1" @click="deleteRow(head.label)" variant="danger">Удалить</b-button>
+          <b-button class="mt-1" @click="deleteRow(data.index)" variant="danger">Удалить</b-button>
           <b-button class="mt-1" @click="showModalEditR(data.index)" variant="success">Редактировать</b-button>
         </b-popover>
       </template>
@@ -67,7 +64,7 @@
           <b>{{ head.label }}</b>
         </b-button>
         <b-popover
-          v-if="head.label != headers[0].label"
+          v-if="(head.label != headers[0].label) && (head.nameHead != 'HEAD_colMore')"
           :key="`popover${head.nameHead}`"
           :target="`button${head.nameHead}`"
           placement="top"
@@ -141,7 +138,7 @@
             type="text"
             v-model.lazy="add.name"
             required
-            @change="changeAddPath"
+            @change="changeEditAddPath"
             placeholder="Допускаются любые символы"
           />
         </b-form-group>
@@ -281,10 +278,9 @@
           label-for="nameRowInput"
           description="Будет отображается в последней колонке"
         >
+        <div :key="index" v-for="(add, index) in newRow.addPath">
           <b-form-input
             class="mt-1 mb-1"
-            v-for="(add, index) in newRow.addPath"
-            :key="index"
             :id="$uuid.v4()"
             type="text"
             v-model.lazy="add.name"
@@ -292,6 +288,7 @@
             @change="changeAddPath"
             placeholder="Допускаются любые символы"
           />
+        </div>
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
@@ -348,6 +345,8 @@ export default {
         ],
       },
 
+      titleEditStand: '',
+
       fields: [],
       items: [],
       headers: [],
@@ -363,13 +362,18 @@ export default {
   },
   methods: {
     setListenData() {
-      const vm = this;
       this.$electron.ipcRenderer.on('data', (event, arg) => {
         this.headers = arg.headers;
         this.fields = [];
         this.headers.forEach((head, index) => {
-          vm.fields.push(`col${index}`);
+          this.fields.push(`col${index}`);
           head.nameHead = `HEAD_col${index}`;
+        });
+        this.fields.push('addPath');
+        this.headers.push({
+          label: 'Дополнительно',
+          nameHead: 'HEAD_addPath',
+          colHelp: 'Дополнительно ',
         });
         this.items = [];
 
@@ -381,19 +385,32 @@ export default {
             index,
           };
           item.col1 = newItem;
+          item.addPath.push({
+            name: '',
+          });
         });
       });
     },
-    rowClickHandler(record, index) {
+    rowRightClickHandler(record, index) {
       console.log(record);
       console.log(index);
+
+      this.titleEditStand = record.col0;
+      console.log(record);
+
+      this.currentTitleRow = this.items[index].col0;
+      this.currentPath = this.items[index].path;
+      this.currentAddPath = this.items[index].addPath;
+
       if (this.selected[0]) {
         this.$root.$emit('bv::hide::popover');
         this.$root.$emit('bv::show::popover', `pop${index}`);
       } else {
-        console.log('unselected');
         this.$root.$emit('bv::hide::popover');
       }
+    },
+    rowClickHandler() {
+      this.$root.$emit('bv::hide::popover');
     },
     setListenAddCol() {
       this.$electron.ipcRenderer.on('callAddColModal', () => {
@@ -419,16 +436,10 @@ export default {
       this.currentHelp = colHelp;
       this.showModalEditCol = !this.showModalEditCol;
     },
-    showModalEditR(id) {
-      /*  this.newTitleRow = titleRow;
-      this.newPath = path;
-      this.newAddPath = addPath;
-
-      this.currentTitleRow = titleRow;
-      this.currentPath = path;
-      this.currentAddPath = addPath; */
-
-      console.log(id);
+    showModalEditR() {
+      this.newTitleRow = this.currentTitleRow;
+      this.newPath = this.currentPath;
+      this.newAddPath = this.currentAddPath;
 
       this.showModalEditRow = !this.showModalEditRow;
     },
@@ -452,21 +463,37 @@ export default {
       this.$electron.ipcRenderer.send('delCol', label);
     },
     addRow() {
-      /* this.newRow.addPath.forEach((path, index, arr) => {
-        path = path.name;
-        if (index === arr.length - 1) {
-          arr.splice(index, 1);
-        }
-      }); */
       this.$electron.ipcRenderer.send('newRow', this.newRow);
       this.showModalAddRow = !this.showModalAddRow;
+    },
+    deleteRow(index) {
+      this.$electron.ipcRenderer.send('delRow', {
+        index,
+      });
     },
     editRow() {
       console.log(this.newTitleRow);
       console.log(this.newPath);
-      console.log(this.addPath);
+      console.log(this.newAddPath);
+      this.newAddPath.forEach((path, index, arr) => {
+        if (path.name === '') {
+          arr.splice(index, 1);
+        }
+      });
+      console.log(this.newAddPath);
+      this.$electron.ipcRenderer.send('editRow', {
+        currentTitleRow: this.currentTitleRow,
+        newTitleRow: this.newTitleRow,
+        newPath: this.newPath,
+        newAddPath: this.newAddPath,
+      });
+      this.showModalEditRow = !this.showModalEditRow;
     },
     resetEditRow() {
+      this.showModalEditRow = !this.showModalEditRow;
+      this.newTitleRow = '';
+      this.newPath = '';
+      this.newAddPath = [];
       console.log('reset');
     },
     addCol() {
@@ -496,8 +523,19 @@ export default {
       this.$electron.ipcRenderer.send('get-data');
       this.isBusy = false;
     },
+    changeEditAddPath() {
+      if (this.currentAddPath[this.currentAddPath.length - 1].name !== '') {
+        this.currentAddPath.push({
+          name: '',
+        });
+      }
+      this.currentAddPath.forEach((row, index, arr) => {
+        if (row.name === '' && arr.length - 1 !== index) {
+          arr.splice(index, 1);
+        }
+      });
+    },
     changeAddPath() {
-      console.log('changhe');
       if (this.newRow.addPath[this.newRow.addPath.length - 1].name !== '') {
         this.newRow.addPath.push({
           name: '',
