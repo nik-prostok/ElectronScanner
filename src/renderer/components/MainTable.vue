@@ -38,7 +38,7 @@
     >
       <template slot="addPath" slot-scope="data">
         <div :key=index v-for="(path, index) in data.item.addPath">
-           <p v-if="path.name !== ''">{{path.name}}</p>
+           <p class="small-text" v-if="path.name !== ''">{{path.name}}</p>
         </div>
          
       </template>
@@ -366,14 +366,17 @@ export default {
         this.headers = arg.headers;
         this.fields = [];
         this.headers.forEach((head, index) => {
-          this.fields.push(`col${index}`);
+          this.fields.push({
+            key: `col${index}`,
+            tdClass: 'text-center',
+          });
           head.nameHead = `HEAD_col${index}`;
         });
         this.fields.push('addPath');
         this.headers.push({
-          label: 'Дополнительно',
+          label: 'Доп.',
           nameHead: 'HEAD_addPath',
-          colHelp: 'Дополнительно ',
+          colHelp: 'Дополнительно',
         });
         this.items = [];
 
@@ -400,14 +403,16 @@ export default {
 
       this.currentTitleRow = this.items[index].col0;
       this.currentPath = this.items[index].path;
-      this.currentAddPath = this.items[index].addPath;
-
-      if (this.selected[0]) {
-        this.$root.$emit('bv::hide::popover');
-        this.$root.$emit('bv::show::popover', `pop${index}`);
-      } else {
-        this.$root.$emit('bv::hide::popover');
-      }
+      this.currentAddPath = [];
+      this.currentAddPath = JSON.parse(JSON.stringify(this.items[index].addPath));
+      this.currentAddPath = this.currentAddPath.map((path) => {
+        const newPath = {
+          name: path.name.split(' ')[0],
+        };
+        return newPath;
+      });
+      this.$root.$emit('bv::hide::popover');
+      this.$root.$emit('bv::show::popover', `pop${index}`);
     },
     rowClickHandler() {
       this.$root.$emit('bv::hide::popover');
@@ -550,3 +555,10 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+  .small-text {
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+  }
+</style>
