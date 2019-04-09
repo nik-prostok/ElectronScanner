@@ -89,6 +89,8 @@ function createWindow() {
     height: 563,
     useContentSize: true,
     width: 1000,
+    minWidth: 500,
+    minHeight: 200,
   });
 
   mainWindow.loadURL(winURL);
