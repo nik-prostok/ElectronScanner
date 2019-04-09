@@ -5,16 +5,16 @@ Vue.use(Router);
 
 export default new Router({
   routes: [
-    /* {
-      path: "/",
-      name: "landing-page",
-      component: require("@/components/LandingPage").default
-    }, */
     {
       path: '/',
       name: 'main-table',
       component: require('@/components/MainTable').default,
     },
+    /* {
+      path: '/help',
+      name: 'help',
+      component: require('@/components/Help').default,
+    }, */
     {
       path: '*',
       redirect: '/',

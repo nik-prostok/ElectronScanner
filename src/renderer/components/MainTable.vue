@@ -24,7 +24,6 @@
       :busy="isBusy"
       striped
       fixed
-      id="mainTable"
       selectable
       selectedVariant="success"
       hover
@@ -37,10 +36,9 @@
       @row-clicked="rowClickHandler"
     >
       <template slot="addPath" slot-scope="data">
-        <div :key=index v-for="(path, index) in data.item.addPath">
-           <p class="small-text" v-if="path.name !== ''">{{path.name}}</p>
+        <div :key="index" v-for="(path, index) in data.item.addPath">
+          <p class="small-text" v-if="path.name !== ''">{{path.name}}</p>
         </div>
-         
       </template>
       <template slot="col1" slot-scope="data">
         <div :id="`pop${data.index}`">{{data.value.value }}</div>
@@ -278,17 +276,17 @@
           label-for="nameRowInput"
           description="Будет отображается в последней колонке"
         >
-        <div :key="index" v-for="(add, index) in newRow.addPath">
-          <b-form-input
-            class="mt-1 mb-1"
-            :id="$uuid.v4()"
-            type="text"
-            v-model.lazy="add.name"
-            required
-            @change="changeAddPath"
-            placeholder="Допускаются любые символы"
-          />
-        </div>
+          <div :key="index" v-for="(add, index) in newRow.addPath">
+            <b-form-input
+              class="mt-1 mb-1"
+              :id="$uuid.v4()"
+              type="text"
+              v-model.lazy="add.name"
+              required
+              @change="changeAddPath"
+              placeholder="Допускаются любые символы"
+            />
+          </div>
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
@@ -309,6 +307,8 @@ export default {
       showModalEditCol: false,
       showModalEditRow: false,
       isBusy: true,
+
+      indexOpenPopover: null,
 
       currentLabel: '',
       currentHelp: '',
@@ -353,6 +353,12 @@ export default {
       selected: null,
     };
   },
+  created() {
+    const vm = this;
+    document.addEventListener('click', () => {
+      vm.toggleDropdown();
+    });
+  },
   mounted() {
     this.getData();
     this.setListenAddCol();
@@ -361,6 +367,9 @@ export default {
     this.setListenStatus();
   },
   methods: {
+    toggleDropdown() {
+      this.$root.$emit('bv::hide::popover', `pop${this.indexOpenPopover}`);
+    },
     setListenData() {
       this.$electron.ipcRenderer.on('data', (event, arg) => {
         this.headers = arg.headers;
@@ -397,6 +406,8 @@ export default {
     rowRightClickHandler(record, index) {
       console.log(record);
       console.log(index);
+
+      this.indexOpenPopover = index;
 
       this.titleEditStand = record.col0;
       console.log(record);
@@ -557,8 +568,8 @@ export default {
 </script>
 
 <style scoped>
-  .small-text {
-    font-size: 0.7rem;
-    margin-bottom: 6px;
-  }
+.small-text {
+  font-size: 0.7rem;
+  margin-bottom: 6px;
+}
 </style>

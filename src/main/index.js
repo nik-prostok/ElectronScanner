@@ -114,7 +114,6 @@ app.on('activate', () => {
   }
 });
 
-
 ipcMain.on('get-data', (event) => {
   event.sender.send('data', getData());
 });
