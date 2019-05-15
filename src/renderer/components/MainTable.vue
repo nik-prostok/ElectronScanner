@@ -90,7 +90,7 @@
       title="Редактирование строки"
       header-bg-variant="dark"
       header-text-variant="light"
-      id="увшеRowModal"
+      id="editRowModal"
     >
       <b-form>
         <b-form-group
@@ -358,21 +358,27 @@ export default {
     document.addEventListener('click', () => {
       vm.toggleDropdown();
     });
+    this.getData();
   },
   mounted() {
-    this.getData();
+    this.setListenData();
     this.setListenAddCol();
     this.setListenAddRow();
-    this.setListenData();
-    this.setListenStatus();
+    // this.setListenStatus();
   },
   methods: {
     toggleDropdown() {
       this.$root.$emit('bv::hide::popover', `pop${this.indexOpenPopover}`);
     },
     setListenData() {
+      this.$electron.ipcRenderer.on('getHelp', () => {
+        console.log('getHelp');
+        this.$router.push('/help');
+      });
       this.$electron.ipcRenderer.on('data', (event, arg) => {
-        this.headers = arg.headers;
+        // this.headers = [];
+        this.headers = JSON.parse(JSON.stringify(arg.headers));
+        console.log(arg.headers);
         this.fields = [];
         this.headers.forEach((head, index) => {
           this.fields.push({

@@ -10,11 +10,11 @@ export default new Router({
       name: 'main-table',
       component: require('@/components/MainTable').default,
     },
-    /* {
+    {
       path: '/help',
       name: 'help',
       component: require('@/components/Help').default,
-    }, */
+    },
     {
       path: '*',
       redirect: '/',

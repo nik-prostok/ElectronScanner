@@ -1,9 +1,4 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  Menu,
-} from 'electron'; // eslint-disable-lint
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'; // eslint-disable-lint
 import watch from 'node-watch';
 
 import getData from './getData';
@@ -14,56 +9,61 @@ import delRow from './delRow';
 import editCol from './editCol';
 import editRow from './editRow';
 
-
 let mainWindow;
 
-const template = [{
-  label: 'Вид',
-  submenu: [{
-    role: 'reload',
-    label: 'Перезагрузить',
+const template = [
+  {
+    label: 'Вид',
+    submenu: [
+      {
+        role: 'reload',
+        label: 'Перезагрузить',
+      },
+      {
+        role: 'toggledevtools',
+        label: 'Режим разработчика',
+      },
+      {
+        type: 'separator',
+      },
+      {
+        type: 'separator',
+      },
+      {
+        role: 'togglefullscreen',
+        label: 'На полный экран',
+      },
+    ],
   },
   {
-    role: 'toggledevtools',
-    label: 'Режим разработчика',
+    role: 'About',
+    label: 'Справка',
+    submenu: [
+      {
+        label: 'Открыть помощь',
+        click() {
+          mainWindow.webContents.send('getHelp');
+        },
+      },
+    ],
   },
   {
-    type: 'separator',
+    label: 'Редактор',
+    submenu: [
+      {
+        label: 'Добавить колонку',
+        click() {
+          mainWindow.webContents.send('callAddColModal');
+        },
+      },
+      {
+        label: 'Добавить строку',
+        click() {
+          mainWindow.webContents.send('callAddRowModal');
+        },
+      },
+    ],
   },
-  {
-    type: 'separator',
-  },
-  {
-    role: 'togglefullscreen',
-    label: 'На полный экран',
-  },
-  ],
-},
-{
-  role: 'help',
-  label: 'Помощь',
-  submenu: [{
-    label: 'Learn More',
-    click() {
-      require('electron').shell.openExternal('https://electronjs.org');
-    },
-  }],
-},
-{
-  label: 'Редактор',
-  submenu: [{
-    label: 'Добавить колонку',
-    click() {
-      mainWindow.webContents.send('callAddColModal');
-    },
-  },
-  {
-    label: 'Добавить строку',
-    click() {
-      mainWindow.webContents.send('callAddRowModal');
-    },
-  }],
-},
 ];
 
 const menu = Menu.buildFromTemplate(template);
@@ -74,12 +74,16 @@ Menu.setApplicationMenu(menu);
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 if (process.env.NODE_ENV !== 'development') {
-  global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\') // eslint-disable-line
+  // eslint-disable-next-line no-underscore-dangle
+  global.__static = require('path')
+    .join(__dirname, '/static')
+    .replace(/\\/g, "\\\\"); // eslint-disable-line
 }
 
-const winURL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:9080'
-  : `file://${__dirname}/index.html`;
+const winURL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:9080'
+    : `file://${__dirname}/index.html`;
 
 function createWindow() {
   /**
@@ -111,6 +115,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) {
     createWindow();
+    mainWindow.webContents.send('data', getData());
   }
 });
 
@@ -148,9 +153,13 @@ ipcMain.on('delRow', (event, arg) => {
   event.sender.send('status', 200);
 });
 
-watch('C:\\Users\\User\\Desktop\\test_dir', {
-  recursive: true,
-}, (evt, name) => {
-  console.log('%s changed.', name);
-  mainWindow.webContents.send('data', getData());
-});
+watch(
+  'C:\\Users\\User\\Desktop\\test_dir',
+  {
+    recursive: true,
+  },
+  (evt, name) => {
+    console.log('%s changed.', name);
+    mainWindow.webContents.send('data', getData());
+  },
+);
