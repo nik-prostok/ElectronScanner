@@ -33,15 +33,17 @@ export default function getData() {
       if (col.label === arr[0].label) {
         rows[rowIndex][`col${colIndex}`] = row.name;
       } else {
-        rows[rowIndex][`col${colIndex}`] = getMostRecentFileName(`${row.path}/${col.label}`);
+        rows[rowIndex][`col${colIndex}`] = getMostRecentFileName(`${row.path}/${col.nameDir}`);
       }
-      if (colIndex === (arr.length - 1)) {
+      if (colIndex === arr.length - 1) {
         const index = colIndex + 1;
         rows[rowIndex][`col${index}`] = [];
         if (row.addPath !== undefined) {
           // (row.addPath);
           row.addPath.forEach((namePath, ind) => {
-            rows[rowIndex].addPath[ind].name = `${namePath.name} ${getMostRecentFileName(`${row.path}/${namePath.name}`)}`;
+            rows[rowIndex].addPath[ind].name = `${
+              namePath.name
+            } ${getMostRecentFileName(`${row.path}/${namePath.name}`)}`;
           });
         }
       }

@@ -1,25 +1,5 @@
 <template>
   <div id="main-table" class="mb-1 mt-1">
-    <!-- <b-button @click="toggleBusy">Toggle Busy State</b-button> -->
-    <!-- <div class="container">
-      <div class="d-flex flex-row">
-        <b-button-group size="lg" class="m-2">
-          <b-button
-          id="testButton"
-            v-b-tooltip.hover
-            title="Добавить колонку в таблицу"
-            variant="success"
-            v-b-modal.addColModal
-          >Добавить колонку</b-button>
-          <b-button
-            v-b-tooltip.hover
-            title="Добавить строку в таблицу"
-            variant="success"
-            v-b-modal.addRowModal
-          >Добавить строку</b-button>
-        </b-button-group>
-      </div>
-    </div>-->
     <b-table
       :busy="isBusy"
       striped
@@ -73,7 +53,7 @@
             <b-button class="mb-1" @click="deleteCol(head.label)" variant="danger">Удалить</b-button>
             <b-button
               class="mt-1"
-              @click="showModalEdit(head.label, head.colHelp)"
+              @click="showModalEdit(head.label, head.colHelp, head.nameDir)"
               variant="success"
             >Редактировать</b-button>
           </div>
@@ -114,13 +94,18 @@
           label-for="pathRowInput"
           description="Путь до папки с результатами полета"
         >
-          <b-form-input
-            id="pathRowInput"
-            type="text"
-            v-model="newPath"
-            required
-            placeholder="Введите путь с разделителями '\\'"
-          />
+          <b-input-group>
+            <b-form-input
+              id="pathRowInput"
+              type="text"
+              v-model="newPath"
+              required
+              placeholder="Введите путь с разделителями '\\'"
+            />
+            <b-input-group-append>
+              <b-button @click="callChooseFile('editRow')" variant="info">Выбрать</b-button>
+            </b-input-group-append>
+          </b-input-group>
         </b-form-group>
         <b-form-group
           id="nameRowInputGroup"
@@ -181,6 +166,20 @@
             placeholder="Допускаются любые символы"
           />
         </b-form-group>
+        <b-form-group
+          id="nameDirColInputGroup"
+          label="Название директории:"
+          label-for="nameDirColInput"
+          description="Название директории"
+        >
+          <b-form-input
+            id="nameDirColInput"
+            type="text"
+            v-model="newNameDir"
+            required
+            placeholder="Допускаются любые символы"
+          />
+        </b-form-group>
       </b-form>
       <template slot="modal-footer">
         <b-button @click="resetEditCol" variant="danger">Сбросить</b-button>
@@ -226,6 +225,23 @@
             placeholder="Допускаются любые символы"
           />
         </b-form-group>
+
+        <b-form-group
+          id="nameDirColInputGroup"
+          label="Название директории:"
+          label-for="nameDirColInput"
+          description="Название директории"
+        >
+          <b-input-group>
+            <b-form-input
+              id="nameDirColInput"
+              type="text"
+              v-model="newCol.nameDir"
+              required
+              placeholder="Допускаются любые символы"
+            />
+          </b-input-group>
+        </b-form-group>
       </b-form>
       <template slot="modal-footer">
         <b-button @click="resetAddCol" variant="danger">Сбросить</b-button>
@@ -255,20 +271,23 @@
             placeholder="Допускаются любые символы"
           />
         </b-form-group>
-
         <b-form-group
           id="pathRowInputGroup"
           label="Путь к папке:"
           label-for="pathRowInput"
           description="Путь до папки с результатами полета"
         >
-          <b-form-input
-            id="pathRowInput"
-            type="text"
-            v-model="newRow.path"
-            required
-            placeholder="Введите путь с разделителями '\\'"
-          />
+          <b-input-group>
+            <b-form-input
+              id="pathRowInput"
+              type="text"
+              v-model="newRow.path"
+              required
+            />
+            <b-input-group-append>
+              <b-button @click="callChooseFile('addRow')" variant="info">Выбрать</b-button>
+            </b-input-group-append>
+          </b-input-group>
         </b-form-group>
         <b-form-group
           id="nameRowInputGroup"
@@ -312,8 +331,10 @@ export default {
 
       currentLabel: '',
       currentHelp: '',
+      currentNameDir: '',
       newLabel: '',
       newHelp: '',
+      newNameDir: '',
 
       currentTitleRow: '',
       currentPath: '',
@@ -333,6 +354,7 @@ export default {
 
       newCol: {
         label: '',
+        nameDir: '',
         colHelp: '',
       },
       newRow: {
@@ -364,9 +386,21 @@ export default {
     this.setListenData();
     this.setListenAddCol();
     this.setListenAddRow();
+    this.setListenCallFileChoose();
     // this.setListenStatus();
   },
   methods: {
+    setListenCallFileChoose() {
+      this.$electron.ipcRenderer.on('calladdRow', (event, arg) => {
+        this.newRow.path = arg;
+      });
+      this.$electron.ipcRenderer.on('calleditRow', (event, arg) => {
+        this.newPath = arg;
+      });
+    },
+    callChooseFile(type) {
+      this.$electron.ipcRenderer.send('callChooseFile', type);
+    },
     toggleDropdown() {
       this.$root.$emit('bv::hide::popover', `pop${this.indexOpenPopover}`);
     },
@@ -451,11 +485,13 @@ export default {
         }
       });
     },
-    showModalEdit(label, colHelp) {
+    showModalEdit(label, colHelp, nameDir) {
       this.newHelp = colHelp;
       this.newLabel = label;
+      this.newNameDir = nameDir;
       this.currentLabel = label;
       this.currentHelp = colHelp;
+      this.currentNameDir = nameDir;
       this.showModalEditCol = !this.showModalEditCol;
     },
     showModalEditR() {
@@ -472,26 +508,32 @@ export default {
       this.$electron.ipcRenderer.send('editCol', {
         label: this.currentLabel,
         newLabel: this.newLabel,
+        newNameDir: this.newNameDir,
         newHelp: this.newHelp,
       });
       this.resetEditCol();
+      this.getData();
     },
     resetEditCol() {
       this.showModalEditCol = !this.showModalEditCol;
       this.newLabel = '';
+      this.newNameDir = '';
       this.newHelp = '';
     },
     deleteCol(label) {
       this.$electron.ipcRenderer.send('delCol', label);
+      this.getData();
     },
     addRow() {
       this.$electron.ipcRenderer.send('newRow', this.newRow);
       this.showModalAddRow = !this.showModalAddRow;
+      this.getData();
     },
     deleteRow(index) {
       this.$electron.ipcRenderer.send('delRow', {
         index,
       });
+      this.getData();
     },
     editRow() {
       console.log(this.newTitleRow);
@@ -510,6 +552,7 @@ export default {
         newAddPath: this.newAddPath,
       });
       this.showModalEditRow = !this.showModalEditRow;
+      this.getData();
     },
     resetEditRow() {
       this.showModalEditRow = !this.showModalEditRow;
@@ -521,10 +564,12 @@ export default {
     addCol() {
       this.$electron.ipcRenderer.send('newCol', this.newCol);
       this.showModalAddCol = !this.showModalAddCol;
+      this.getData();
     },
     resetAddCol() {
       this.newCol = {
-        lable: '',
+        label: '',
+        nameDir: '',
         colHelp: '',
       };
       this.showModalAddCol = !this.showModalAddCol;

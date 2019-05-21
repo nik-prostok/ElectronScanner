@@ -8,6 +8,7 @@ export default function editCol(labels) {
       if (col.label === labels.label) {
         arr[index].colHelp = labels.newHelp;
         arr[index].label = labels.newLabel;
+        arr[index].nameDir = labels.newNameDir;
       }
     });
     config = JSON.stringify(config);

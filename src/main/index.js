@@ -1,4 +1,6 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron'; // eslint-disable-lint
+/* eslint-disable no-unused-vars */
+// eslint-disable-next-line no-unused-vars
+import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron'; // eslint-disable-lint
 import watch from 'node-watch';
 
 import getData from './getData';
@@ -77,7 +79,7 @@ if (process.env.NODE_ENV !== 'development') {
   // eslint-disable-next-line no-underscore-dangle
   global.__static = require('path')
     .join(__dirname, '/static')
-    .replace(/\\/g, "\\\\"); // eslint-disable-line
+    .replace(/\\/g, '\\\\'); // eslint-disable-line
 }
 
 const winURL =
@@ -119,8 +121,28 @@ app.on('activate', () => {
   }
 });
 
+ipcMain.on('callChooseFile', (event, arg) => {
+  event.sender.send(
+    `call${arg}`,
+    dialog.showOpenDialog({ properties: ['openDirectory'] })[0],
+  );
+});
+
 ipcMain.on('get-data', (event) => {
   event.sender.send('data', getData());
+  const data = getData();
+  data.rows.forEach((row) => {
+    watch(
+      row.path,
+      {
+        recursive: true,
+      },
+      (evt, name) => {
+        console.log('%s changed.', name);
+        // mainWindow.webContents.send('data', getData());
+      }
+    );
+  });
 });
 
 ipcMain.on('editCol', (event, arg) => {
@@ -134,6 +156,7 @@ ipcMain.on('delCol', (event, arg) => {
 });
 
 ipcMain.on('newCol', (event, arg) => {
+  console.log(arg);
   addCol(arg);
   event.sender.send('status', 200);
 });
@@ -152,14 +175,3 @@ ipcMain.on('delRow', (event, arg) => {
   delRow(arg);
   event.sender.send('status', 200);
 });
-
-watch(
-  'C:\\Users\\User\\Desktop\\test_dir',
-  {
-    recursive: true,
-  },
-  (evt, name) => {
-    console.log('%s changed.', name);
-    mainWindow.webContents.send('data', getData());
-  },
-);
