@@ -1,1 +1,22 @@
-{"columns":[{"colHelp":"name!","label":"Стенд"},{"colHelp":"тестированиеr","label":"ФД","nameDir":"FD"},{"colHelp":"test ","label":"ИПО2","nameDir":"IPO222"},{"colHelp":"test 23","label":"ФПО БУК","nameDir":"FPO BUK1"},{"colHelp":"test 2","label":"ФПО БВУ","nameDir":"FPO BVU"}],"rows":[{"name":"Арктика-РГ","path":"C:\\Users\\User\\Desktop\\test_dir\\Andrew33","addPath":[{"name":"Bu13"}]},{"addPath":[{"name":"4545"},{"name":"6566"},{"name":"7777"}],"name":"Электро","path":"C:\\Users\\User\\Desktop\\test_dir\\34343"}]}
+{
+  "columns": [
+    { "colHelp": "name!", "label": "Стенд" },
+    { "colHelp": "тестированиеr", "label": "ФД", "nameDir": "FD" },
+    { "colHelp": "ИПО", "label": "ИПО", "nameDir": "IPO" },
+    { "colHelp": "фпо бук", "label": "ФПО БУК", "nameDir": "FPO BUK" },
+    { "colHelp": "фпо бву", "label": "ФПО БВУ", "nameDir": "FPO BVU" }
+  ],
+  "rows": [
+    { "addPath": [{ "name": "3434" }], "name": "2323", "path": "334" },
+    {
+      "addPath": [{ "name": "rhrhrty" }, { "name": "trytyn" }, { "name": "" }],
+      "name": "trhtryh",
+      "path": "trhrhr"
+    },
+    {
+      "addPath": [{ "name": "Нет" }, { "name": "dfgdfg" }],
+      "name": "rgg1",
+      "path": "gegd"
+    }
+  ]
+}

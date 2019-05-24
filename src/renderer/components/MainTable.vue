@@ -14,6 +14,7 @@
       @row-selected="rowSelected"
       @row-contextmenu="rowRightClickHandler"
       @row-clicked="rowClickHandler"
+      ref="table"
     >
       <template slot="addPath" slot-scope="data">
         <div :key="index" v-for="(path, index) in data.item.addPath">
@@ -42,7 +43,7 @@
           <b>{{ head.label }}</b>
         </b-button>
         <b-popover
-          v-if="(head.label != headers[0].label) && (head.nameHead != 'HEAD_colMore')"
+          v-if="(head.label != headers[0].label) && (head.label != headers[headers.length-1].label) && (head.nameHead != 'HEAD_colMore')"
           :key="`popover${head.nameHead}`"
           :target="`button${head.nameHead}`"
           placement="top"
@@ -113,17 +114,20 @@
           label-for="nameRowInput"
           description="Будет отображается в последней колонке"
         >
-          <b-form-input
-            class="mt-1 mb-1"
-            v-for="(add, index) in newAddPath"
-            :key="index"
-            :id="$uuid.v4()"
-            type="text"
-            v-model.lazy="add.name"
-            required
-            @change="changeEditAddPath"
-            placeholder="Допускаются любые символы"
-          />
+          <b-input-group :key="index" v-for="(add, index) in newAddPath">
+            <b-form-input
+              class="mt-1 mb-1"
+              :key="index"
+              :id="$uuid.v4()"
+              type="text"
+              v-model.lazy="add.name"
+              required
+              placeholder="Допускаются любые символы"
+            />
+            <b-input-group-append class="mt-1 mb-1" v-if="(newRow.addPath.length - 1) === index">
+              <b-button @click="changeEditAddPath()" variant="info">+</b-button>
+            </b-input-group-append>
+          </b-input-group>
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
@@ -170,7 +174,6 @@
           id="nameDirColInputGroup"
           label="Название директории:"
           label-for="nameDirColInput"
-          description="Название директории"
         >
           <b-form-input
             id="nameDirColInput"
@@ -230,7 +233,6 @@
           id="nameDirColInputGroup"
           label="Название директории:"
           label-for="nameDirColInput"
-          description="Название директории"
         >
           <b-input-group>
             <b-form-input
@@ -278,12 +280,7 @@
           description="Путь до папки с результатами полета"
         >
           <b-input-group>
-            <b-form-input
-              id="pathRowInput"
-              type="text"
-              v-model="newRow.path"
-              required
-            />
+            <b-form-input id="pathRowInput" type="text" v-model="newRow.path" required/>
             <b-input-group-append>
               <b-button @click="callChooseFile('addRow')" variant="info">Выбрать</b-button>
             </b-input-group-append>
@@ -295,17 +292,19 @@
           label-for="nameRowInput"
           description="Будет отображается в последней колонке"
         >
-          <div :key="index" v-for="(add, index) in newRow.addPath">
+          <b-input-group :key="index" v-for="(add, index) in newRow.addPath">
             <b-form-input
               class="mt-1 mb-1"
               :id="$uuid.v4()"
               type="text"
               v-model.lazy="add.name"
               required
-              @change="changeAddPath"
               placeholder="Допускаются любые символы"
             />
-          </div>
+            <b-input-group-append class="mt-1 mb-1" v-if="(newRow.addPath.length - 1) === index">
+              <b-button @click="changeAddPath()" variant="info">+</b-button>
+            </b-input-group-append>
+          </b-input-group>
         </b-form-group>
       </b-form>
       <template slot="modal-footer">
@@ -324,7 +323,7 @@ export default {
       showModalAddCol: false,
       showModalAddRow: false,
       showModalEditCol: false,
-      showModalEditRow: false,
+      _showModalEditRow: false,
       isBusy: true,
 
       indexOpenPopover: null,
@@ -405,6 +404,9 @@ export default {
       this.$root.$emit('bv::hide::popover', `pop${this.indexOpenPopover}`);
     },
     setListenData() {
+      this.$electron.ipcRenderer.on('status', () => {
+        this.getData();
+      });
       this.$electron.ipcRenderer.on('getHelp', () => {
         console.log('getHelp');
         this.$router.push('/help');
@@ -442,16 +444,11 @@ export default {
           });
         });
       });
+      this.$refs.table.refresh();
     },
     rowRightClickHandler(record, index) {
-      console.log(record);
-      console.log(index);
-
       this.indexOpenPopover = index;
-
       this.titleEditStand = record.col0;
-      console.log(record);
-
       this.currentTitleRow = this.items[index].col0;
       this.currentPath = this.items[index].path;
       this.currentAddPath = [];
@@ -512,7 +509,6 @@ export default {
         newHelp: this.newHelp,
       });
       this.resetEditCol();
-      this.getData();
     },
     resetEditCol() {
       this.showModalEditCol = !this.showModalEditCol;
@@ -522,29 +518,22 @@ export default {
     },
     deleteCol(label) {
       this.$electron.ipcRenderer.send('delCol', label);
-      this.getData();
     },
     addRow() {
       this.$electron.ipcRenderer.send('newRow', this.newRow);
       this.showModalAddRow = !this.showModalAddRow;
-      this.getData();
     },
     deleteRow(index) {
       this.$electron.ipcRenderer.send('delRow', {
         index,
       });
-      this.getData();
     },
     editRow() {
-      console.log(this.newTitleRow);
-      console.log(this.newPath);
-      console.log(this.newAddPath);
       this.newAddPath.forEach((path, index, arr) => {
         if (path.name === '') {
           arr.splice(index, 1);
         }
       });
-      console.log(this.newAddPath);
       this.$electron.ipcRenderer.send('editRow', {
         currentTitleRow: this.currentTitleRow,
         newTitleRow: this.newTitleRow,
@@ -559,12 +548,10 @@ export default {
       this.newTitleRow = '';
       this.newPath = '';
       this.newAddPath = [];
-      console.log('reset');
     },
     addCol() {
       this.$electron.ipcRenderer.send('newCol', this.newCol);
       this.showModalAddCol = !this.showModalAddCol;
-      this.getData();
     },
     resetAddCol() {
       this.newCol = {
@@ -578,6 +565,11 @@ export default {
       this.newRow = {
         name: '',
         path: '',
+        addPath: [
+          {
+            name: '',
+          },
+        ],
       };
       this.showModalAddRow = !this.showModalAddRow;
     },
@@ -585,7 +577,6 @@ export default {
       this.isBusy = !this.isBusy;
     },
     getData() {
-      console.log('getData');
       this.isBusy = true;
       this.$electron.ipcRenderer.send('get-data');
       this.isBusy = false;

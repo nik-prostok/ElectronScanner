@@ -12,7 +12,7 @@ import editCol from './editCol';
 import editRow from './editRow';
 
 let mainWindow;
-
+const paths = [];
 const template = [
   {
     label: 'Вид',
@@ -129,20 +129,19 @@ ipcMain.on('callChooseFile', (event, arg) => {
 });
 
 ipcMain.on('get-data', (event) => {
-  event.sender.send('data', getData());
   const data = getData();
-  data.rows.forEach((row) => {
-    watch(
-      row.path,
-      {
-        recursive: true,
-      },
-      (evt, name) => {
-        console.log('%s changed.', name);
-        // mainWindow.webContents.send('data', getData());
-      }
-    );
-  });
+  console.log(data.paths);
+  watch(
+    data.paths,
+    {
+      recursive: true,
+    },
+    (evt, name) => {
+      mainWindow.webContents.send('data', getData());
+    },
+  );
+
+  event.sender.send('data', data);
 });
 
 ipcMain.on('editCol', (event, arg) => {
@@ -156,7 +155,6 @@ ipcMain.on('delCol', (event, arg) => {
 });
 
 ipcMain.on('newCol', (event, arg) => {
-  console.log(arg);
   addCol(arg);
   event.sender.send('status', 200);
 });
@@ -175,3 +173,4 @@ ipcMain.on('delRow', (event, arg) => {
   delRow(arg);
   event.sender.send('status', 200);
 });
+
