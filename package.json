@@ -1,7 +1,7 @@
 {
   "name": "electron-scanner",
-  "version": "0.0.3",
-  "author": "NikProst <nikita.umet@gmail.com>",
+  "version": "0.0.4",
+  "author": "NikProst, AndrewAlexeev <nikita.umet@gmail.com>",
   "description": "This is scanner files on Electron",
   "license": null,
   "arch":"ia32",
